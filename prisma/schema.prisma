@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id          String     @id @default(cuid())
+  adminToken  String     @unique @default(cuid())
+  title       String
+  description String?
+  deadline    DateTime?
+  createdAt   DateTime   @default(now())
+  slots       Slot[]
+  responses   Response[]
+}
+
+model Slot {
+  id      String   @id @default(cuid())
+  eventId String
+  startAt DateTime
+  endAt   DateTime
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  answers Answer[]
+}
+
+model Response {
+  id        String   @id @default(cuid())
+  eventId   String
+  name      String
+  memo      String?
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  answers   Answer[]
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  slotId     String
+  responseId String
+  status     String   // "best" | "ok" | "maybe" | "no"
+  slot       Slot     @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  @@unique([slotId, responseId])
+}
